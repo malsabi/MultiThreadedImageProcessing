@@ -21,3 +21,24 @@ Used for Remote Desktop streaming purposes to acheive 60 FPS and above by sendin
 | 30          | 3                  |      RGB        |     50  Mbps    |
 
 Maximum block size can be up to 200, any more than that it would be redundant.
+
+
+### Usage
+
+```Csharp
+private Codec.Encoder encoder = new Codec.Encoder();
+private Codec.Decoder decoder = new Codec.Decoder();
+
+private void DoStream()
+{
+   PixelFormat BitmapFormat = PixelFormat.Format32bppArgb;
+   MemoryStream OutStream = new MemoryStream();
+   while (true)
+   {
+       encoder.Encode(OutStream, BitmapExtensions.CaptureScreen(BitmapFormat), BitmapFormat);
+       StreamBox.Image = decoder.Decode(OutStream);
+       OutStream.Position = 0;
+       OutStream.SetLength(0);
+   }
+}
+```
