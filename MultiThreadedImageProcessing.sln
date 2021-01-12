@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30717.126
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiThreadedImageProcessing", "MultiThreadedImageProcessing\MultiThreadedImageProcessing.csproj", "{76A2E8E1-E736-4F37-A5EA-D17208329124}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{76A2E8E1-E736-4F37-A5EA-D17208329124}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76A2E8E1-E736-4F37-A5EA-D17208329124}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76A2E8E1-E736-4F37-A5EA-D17208329124}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76A2E8E1-E736-4F37-A5EA-D17208329124}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9622682B-54E0-4685-8AB2-EE0C91ED5E6B}
+	EndGlobalSection
+EndGlobal
