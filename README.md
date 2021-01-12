@@ -13,8 +13,11 @@ Used for Remote Desktop streaming purposes to acheive 60 FPS and above by sendin
 ### Recommended Block Sizes
 | Block Size  | Pixel Size (bytes) |   Pixel Format  |  Internet Speed |
 | ----------- | -------------      | -------------   |  -------------  |
-| 120         | 4                  |      RGBA       |     120 MB/S +  |
-| 60          | 4                  |      RGBA       |     60 MB/S     |
-| 30          | 4                  |      RGBA       |     30 MB/s     |
+| 120         | 4                  |      RGBA       |     120 Mbps +  |
+| 60          | 4                  |      RGBA       |     80  Mbps    |
+| 30          | 4                  |      RGBA       |     60  Mbps    |
+| 120         | 3                  |      RGB        |     100 MBps    |
+| 60          | 3                  |      RGB        |     60  Mbps    |
+| 30          | 3                  |      RGB        |     50  Mbps    |
 
 Maximum block size can be up to 200, any more than that it would be redundant.
