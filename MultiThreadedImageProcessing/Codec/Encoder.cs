@@ -17,6 +17,11 @@ namespace MultiThreadedImageProcessing.Codec
         private readonly JpgCompression Compressor;
         #endregion
 
+        #region "Properties"
+        public int PixelSize { get; private set; }
+        public int BlockSize { get; private set; }
+        #endregion
+
         #region "Constructor"
         public Encoder()
         {
@@ -28,8 +33,10 @@ namespace MultiThreadedImageProcessing.Codec
         #endregion
 
         #region "Public Methods"
-        public void Encode(MemoryStream OutStream, Bitmap CurrentBitmap, PixelFormat BitmapFormat)
+        public void Encode(MemoryStream OutStream, Bitmap CurrentBitmap, int blockSize, PixelFormat BitmapFormat)
         {
+            BlockSize = blockSize;
+            PixelSize = BitmapExtensions.BytesPerPixel(BitmapFormat);
             if (TrailBitmap == null)
             {
                 byte[] EncodedBytes = Compressor.Compress(CurrentBitmap);
@@ -54,8 +61,9 @@ namespace MultiThreadedImageProcessing.Codec
                 Changes.AddRange(UpperChanges);
                 Changes.AddRange(LowerChanges);
 
-                foreach (Rectangle Change in Changes)
+                for (int i = 0; i < Changes.Count; i++)
                 {
+                    Rectangle Change = Changes[i];
                     OutStream.Write(BitConverter.GetBytes(Change.X), 0, 4);
                     OutStream.Write(BitConverter.GetBytes(Change.Y), 0, 4);
                     OutStream.Write(BitConverter.GetBytes(Change.Width), 0, 4);
@@ -90,7 +98,6 @@ namespace MultiThreadedImageProcessing.Codec
                 byte* TrailPtr = (byte*)TrailScan0.ToInt32();
                 byte* CurrentPtr = (byte*)CurrentScan0.ToInt32();
                 List<Rectangle> DeltaRows = new List<Rectangle>();
-                //Process Row by Row
                 for (int y = Y; y < Height; y++)
                 {
                     int Offset = (y * Stride) + X;
@@ -108,30 +115,7 @@ namespace MultiThreadedImageProcessing.Codec
                         }
                     }
                 }
-                //Process Block by Block per Row
-                int BlockSize = 40;
-                int PixelSize = 4;
-                for (int i = 0; i < DeltaRows.Count; i++)
-                {
-                    Rectangle ROW = DeltaRows[i];
-                    for (int x = 0; x < ROW.Width; x += BlockSize)
-                    {
-                        if (x + BlockSize > ROW.Width)
-                        {
-                            BlockSize = ROW.Width - x;
-                        }
-                        Rectangle Block = new Rectangle(x, ROW.Y, BlockSize, ROW.Height);
-                        for (int y = 0; y < ROW.Height; y++)
-                        {
-                            int Offset = ((ROW.Y + y) * Stride) + (x * PixelSize);
-                            if (NativeMethods.memcmp(TrailPtr + Offset, CurrentPtr + Offset, (uint)(BlockSize * PixelSize)) != 0)
-                            {
-                                UpperChanges.Add(Block);
-                                break;
-                            }
-                        }
-                    }
-                }
+                UpperChanges.AddRange(BlockProcess(DeltaRows, Stride, PixelSize, BlockSize, TrailPtr, CurrentPtr));
             }
         }
 
@@ -142,8 +126,7 @@ namespace MultiThreadedImageProcessing.Codec
                 byte* TrailPtr = (byte*)TrailScan0.ToInt32();
                 byte* CurrentPtr = (byte*)CurrentScan0.ToInt32();
                 List<Rectangle> DeltaRows = new List<Rectangle>();
-                //Process Row by Row
-                for (int y = Y; y < Height; y++) //n
+                for (int y = Y; y < Height; y++)
                 {
                     int Offset = (y * Stride) + X;
                     Rectangle Row = new Rectangle(X, y, Width, 1);
@@ -160,31 +143,36 @@ namespace MultiThreadedImageProcessing.Codec
                         }
                     }
                 }
-                //Process Block by Block per Row
-                int BlockSize = 40;
-                int PixelSize = 4;
-                for (int i = 0; i < DeltaRows.Count; i++)
+                LowerChanges.AddRange(BlockProcess(DeltaRows, Stride, PixelSize, BlockSize, TrailPtr, CurrentPtr));
+            }
+        }
+
+        private unsafe List<Rectangle> BlockProcess(List<Rectangle> DeltaRows, int Stride, int PixelSize, int BlockSize, byte* TrailPtr, byte* CurrentPtr)
+        {
+            List<Rectangle> BlockChanges = new List<Rectangle>();
+            for (int i = 0; i < DeltaRows.Count; i++)
+            {
+                Rectangle Row = DeltaRows[i];
+                for (int x = 0; x < Row.Width; x += BlockSize)
                 {
-                    Rectangle ROW = DeltaRows[i];
-                    for (int x = 0; x < ROW.Width; x += BlockSize)
+                    if (x + BlockSize > Row.Width)
                     {
-                        if (x + BlockSize > ROW.Width)
+                        BlockSize = Row.Width - x;
+                    }
+                    Rectangle Block = new Rectangle(x, Row.Y, BlockSize, Row.Height);
+                    for (int y = 0; y < Row.Height; y++)
+                    {
+                        int Offset = ((Row.Y + y) * Stride) + (x * PixelSize);
+
+                        if (NativeMethods.memcmp(TrailPtr + Offset, CurrentPtr + Offset, (uint)(BlockSize * PixelSize)) != 0)
                         {
-                            BlockSize = ROW.Width - x;
-                        }
-                        Rectangle Block = new Rectangle(x, ROW.Y, BlockSize, ROW.Height);
-                        for (int y = 0; y < ROW.Height; y++)
-                        {
-                            int Offset = ((ROW.Y + y) * Stride) + (x * PixelSize);
-                            if (NativeMethods.memcmp(TrailPtr + Offset, CurrentPtr + Offset, (uint)(BlockSize * PixelSize)) != 0)
-                            {
-                                LowerChanges.Add(Block);
-                                break;
-                            }
+                            BlockChanges.Add(Block);
+                            break;
                         }
                     }
                 }
             }
+            return BlockChanges;
         }
         #endregion
     }

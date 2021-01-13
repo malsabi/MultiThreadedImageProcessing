@@ -35,7 +35,7 @@ namespace MultiThreadedImageProcessing.Forms
             MemoryStream OutStream = new MemoryStream();
             while (true)
             {
-                encoder.Encode(OutStream, BitmapExtensions.CaptureScreen(BitmapFormat), BitmapFormat);
+                encoder.Encode(OutStream, BitmapExtensions.CaptureScreen(BitmapFormat), 60, BitmapFormat);
                 StreamBox.Image = decoder.Decode(OutStream);
                 OutStream.Position = 0;
                 OutStream.SetLength(0);

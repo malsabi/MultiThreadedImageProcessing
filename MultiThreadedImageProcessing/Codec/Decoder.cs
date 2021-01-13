@@ -35,37 +35,37 @@ namespace MultiThreadedImageProcessing.Codec
             }
             else
             {
-                //BitmapData StickData = TrailBitmap.LockBits(new Rectangle(0, 0, TrailBitmap.Width, TrailBitmap.Height), ImageLockMode.ReadWrite, TrailBitmap.PixelFormat);
-                //int Stride = Math.Abs(StickData.Stride);
-                using (Graphics G = Graphics.FromImage(TrailBitmap))
+                BitmapData StickData = TrailBitmap.LockBits(new Rectangle(0, 0, TrailBitmap.Width, TrailBitmap.Height), ImageLockMode.ReadWrite, TrailBitmap.PixelFormat);
+                int Stride = Math.Abs(StickData.Stride);
+                int DataLength = (int)EncodedStream.Length;
+                byte[] Header = new byte[20];
+                while (DataLength > 0)
                 {
-                    int DataLength = (int)EncodedStream.Length;
-                    byte[] Header = new byte[20];
-                    while (DataLength > 0)
+                    EncodedStream.Read(Header, 0, Header.Length);
+                    Rectangle Rect = new Rectangle(BitConverter.ToInt32(Header, 0), BitConverter.ToInt32(Header, 4), BitConverter.ToInt32(Header, 8), BitConverter.ToInt32(Header, 12));
+                    int ImageLength = BitConverter.ToInt32(Header, 16);
+                    byte[] ImageBuffer = new byte[ImageLength];
+                    EncodedStream.Read(ImageBuffer, 0, ImageBuffer.Length);
+                    using (MemoryStream ImgStream = new MemoryStream(ImageBuffer))
                     {
-                        EncodedStream.Read(Header, 0, Header.Length);
-                        Rectangle rect = new Rectangle(BitConverter.ToInt32(Header, 0), BitConverter.ToInt32(Header, 4), BitConverter.ToInt32(Header, 8), BitConverter.ToInt32(Header, 12));
-                        int ImageLength = BitConverter.ToInt32(Header, 16);
-                        byte[] ImageBuffer = new byte[ImageLength];
-                        EncodedStream.Read(ImageBuffer, 0, ImageBuffer.Length);
-                        using (MemoryStream ImgStream = new MemoryStream(ImageBuffer))
+                        using (Bitmap Img = (Bitmap)Image.FromStream(ImgStream))
                         {
-                            using (Bitmap Img = (Bitmap)Image.FromStream(ImgStream))
+                            int PixelSize = BitmapExtensions.BytesPerPixel(Img.PixelFormat);
+                            BitmapData ImgData = Img.LockBits(new Rectangle(0, 0, Img.Width, Img.Height), ImageLockMode.WriteOnly, Img.PixelFormat);
+                            for (int y = 0; y < Rect.Height; y++)
                             {
-                                G.DrawImage(Img, rect);
-                                //BitmapData ImgData = Img.LockBits(new Rectangle(0, 0, Img.Width, Img.Height), ImageLockMode.WriteOnly, Img.PixelFormat);
-                                //int Offset = (rect.Y * Stride);
-                                //NativeMethods.memcpy(new IntPtr(StickData.Scan0.ToInt32() + Offset), ImgData.Scan0, (uint)(Img.Height * Stride));
-                                //Img.UnlockBits(ImgData);
+                                int SrcOffset = Math.Abs(ImgData.Stride) * y;
+                                int DstOffset = ((Rect.Y + y) * Stride) + (Rect.X * PixelSize);
+                                NativeMethods.memcpy(StickData.Scan0 + DstOffset, ImgData.Scan0 + SrcOffset, (uint)(Img.Width * PixelSize));
                             }
+                            Img.UnlockBits(ImgData);
                         }
-                        DataLength -= 20 + ImageLength;
                     }
+                    DataLength -= 20 + ImageLength;
                 }
-                   
-                //TrailBitmap.UnlockBits(StickData);
+                TrailBitmap.UnlockBits(StickData);
             }
-            return (Bitmap)TrailBitmap.Clone();
+            return TrailBitmap;
         }
         #endregion
     }
