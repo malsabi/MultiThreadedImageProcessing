@@ -30,62 +30,52 @@ namespace MultiThreadedImageProcessing.Forms
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.StartStreamBtn = new System.Windows.Forms.Button();
             this.StreamBox = new System.Windows.Forms.PictureBox();
-            this.ControlPanel = new System.Windows.Forms.Panel();
-            this.FPSLabel = new System.Windows.Forms.Label();
+            this.Commands = new IViewCustomControls.IViewContextMenuStrip();
+            this.startStreamToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ShowChangesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.FPSTimer = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.StreamBox)).BeginInit();
-            this.ControlPanel.SuspendLayout();
+            this.Commands.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // StartStreamBtn
-            // 
-            this.StartStreamBtn.BackColor = System.Drawing.Color.DimGray;
-            this.StartStreamBtn.Dock = System.Windows.Forms.DockStyle.Left;
-            this.StartStreamBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.StartStreamBtn.Font = new System.Drawing.Font("Verdana", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.StartStreamBtn.ForeColor = System.Drawing.Color.White;
-            this.StartStreamBtn.Location = new System.Drawing.Point(0, 0);
-            this.StartStreamBtn.Name = "StartStreamBtn";
-            this.StartStreamBtn.Size = new System.Drawing.Size(123, 57);
-            this.StartStreamBtn.TabIndex = 0;
-            this.StartStreamBtn.Text = "Start";
-            this.StartStreamBtn.UseVisualStyleBackColor = false;
-            this.StartStreamBtn.Click += new System.EventHandler(this.StartStreamBtn_Click);
             // 
             // StreamBox
             // 
-            this.StreamBox.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.StreamBox.BackColor = System.Drawing.Color.Silver;
+            this.StreamBox.ContextMenuStrip = this.Commands;
             this.StreamBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.StreamBox.Location = new System.Drawing.Point(0, 0);
             this.StreamBox.Name = "StreamBox";
-            this.StreamBox.Size = new System.Drawing.Size(766, 485);
+            this.StreamBox.Size = new System.Drawing.Size(641, 456);
             this.StreamBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.StreamBox.TabIndex = 1;
             this.StreamBox.TabStop = false;
+            this.StreamBox.Paint += new System.Windows.Forms.PaintEventHandler(this.StreamBox_Paint);
+            this.StreamBox.Resize += new System.EventHandler(this.StreamBox_Resize);
             // 
-            // ControlPanel
+            // Commands
             // 
-            this.ControlPanel.BackColor = System.Drawing.Color.Gainsboro;
-            this.ControlPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.ControlPanel.Controls.Add(this.FPSLabel);
-            this.ControlPanel.Controls.Add(this.StartStreamBtn);
-            this.ControlPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.ControlPanel.Location = new System.Drawing.Point(0, 485);
-            this.ControlPanel.Name = "ControlPanel";
-            this.ControlPanel.Size = new System.Drawing.Size(766, 61);
-            this.ControlPanel.TabIndex = 2;
+            this.Commands.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.Commands.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(200)))), ((int)(((byte)(200)))));
+            this.Commands.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.startStreamToolStripMenuItem,
+            this.ShowChangesToolStripMenuItem});
+            this.Commands.Name = "Commands";
+            this.Commands.Size = new System.Drawing.Size(153, 48);
             // 
-            // FPSLabel
+            // startStreamToolStripMenuItem
             // 
-            this.FPSLabel.AutoSize = true;
-            this.FPSLabel.Font = new System.Drawing.Font("Verdana", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.FPSLabel.Location = new System.Drawing.Point(144, 14);
-            this.FPSLabel.Name = "FPSLabel";
-            this.FPSLabel.Size = new System.Drawing.Size(73, 23);
-            this.FPSLabel.TabIndex = 1;
-            this.FPSLabel.Text = "FPS: 0";
+            this.startStreamToolStripMenuItem.Name = "startStreamToolStripMenuItem";
+            this.startStreamToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.startStreamToolStripMenuItem.Text = "Start Stream";
+            this.startStreamToolStripMenuItem.Click += new System.EventHandler(this.StartStreamToolStripMenuItem_Click);
+            // 
+            // ShowChangesToolStripMenuItem
+            // 
+            this.ShowChangesToolStripMenuItem.Name = "ShowChangesToolStripMenuItem";
+            this.ShowChangesToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.ShowChangesToolStripMenuItem.Text = "Show Changes";
+            this.ShowChangesToolStripMenuItem.Click += new System.EventHandler(this.ShowChangesToolStripMenuItem_Click);
             // 
             // FPSTimer
             // 
@@ -97,25 +87,23 @@ namespace MultiThreadedImageProcessing.Forms
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(766, 546);
+            this.ClientSize = new System.Drawing.Size(641, 456);
             this.Controls.Add(this.StreamBox);
-            this.Controls.Add(this.ControlPanel);
             this.DoubleBuffered = true;
             this.Name = "StreamingForm";
             this.Text = "StreamingForm";
+            this.Load += new System.EventHandler(this.StreamingForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.StreamBox)).EndInit();
-            this.ControlPanel.ResumeLayout(false);
-            this.ControlPanel.PerformLayout();
+            this.Commands.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
 
         #endregion
-
-        private System.Windows.Forms.Button StartStreamBtn;
         private System.Windows.Forms.PictureBox StreamBox;
-        private System.Windows.Forms.Panel ControlPanel;
-        private System.Windows.Forms.Label FPSLabel;
         private System.Windows.Forms.Timer FPSTimer;
+        private IViewCustomControls.IViewContextMenuStrip Commands;
+        private System.Windows.Forms.ToolStripMenuItem startStreamToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem ShowChangesToolStripMenuItem;
     }
 }

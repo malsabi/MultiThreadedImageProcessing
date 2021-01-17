@@ -19,7 +19,7 @@ namespace MultiThreadedImageProcessing.Codec
 
         #region "Properties"
         public int PixelSize { get; private set; }
-        public int BlockSize { get; private set; }
+        public Size BlockScan { get; private set; }
         #endregion
 
         #region "Constructor"
@@ -33,9 +33,9 @@ namespace MultiThreadedImageProcessing.Codec
         #endregion
 
         #region "Public Methods"
-        public void Encode(MemoryStream OutStream, Bitmap CurrentBitmap, int blockSize, PixelFormat BitmapFormat)
+        public void EncodeDefault(MemoryStream OutStream, Bitmap CurrentBitmap, Size blockSize, PixelFormat BitmapFormat)
         {
-            BlockSize = blockSize;
+            BlockScan = blockSize;
             PixelSize = BitmapExtensions.BytesPerPixel(BitmapFormat);
             if (TrailBitmap == null)
             {
@@ -61,7 +61,7 @@ namespace MultiThreadedImageProcessing.Codec
                 Changes.AddRange(UpperChanges);
                 Changes.AddRange(LowerChanges);
 
-                for (int i = 0; i < Changes.Count; i++)
+                for (int i = 0; i < Changes.Count; ++i)
                 {
                     Rectangle Change = Changes[i];
                     OutStream.Write(BitConverter.GetBytes(Change.X), 0, 4);
@@ -98,7 +98,7 @@ namespace MultiThreadedImageProcessing.Codec
                 byte* TrailPtr = (byte*)TrailScan0.ToInt32();
                 byte* CurrentPtr = (byte*)CurrentScan0.ToInt32();
                 List<Rectangle> DeltaRows = new List<Rectangle>();
-                for (int y = Y; y < Height; y++)
+                for (int y = Y; y < Height; ++y)
                 {
                     int Offset = (y * Stride) + X;
                     Rectangle Row = new Rectangle(X, y, Width, 1);
@@ -115,7 +115,7 @@ namespace MultiThreadedImageProcessing.Codec
                         }
                     }
                 }
-                UpperChanges.AddRange(BlockProcess(DeltaRows, Stride, PixelSize, BlockSize, TrailPtr, CurrentPtr));
+                UpperChanges.AddRange(BlockProcess(DeltaRows, Stride, PixelSize, BlockScan, TrailPtr, CurrentPtr));
             }
         }
 
@@ -126,7 +126,7 @@ namespace MultiThreadedImageProcessing.Codec
                 byte* TrailPtr = (byte*)TrailScan0.ToInt32();
                 byte* CurrentPtr = (byte*)CurrentScan0.ToInt32();
                 List<Rectangle> DeltaRows = new List<Rectangle>();
-                for (int y = Y; y < Height; y++)
+                for (int y = Y; y < Height; ++y)
                 {
                     int Offset = (y * Stride) + X;
                     Rectangle Row = new Rectangle(X, y, Width, 1);
@@ -143,30 +143,37 @@ namespace MultiThreadedImageProcessing.Codec
                         }
                     }
                 }
-                LowerChanges.AddRange(BlockProcess(DeltaRows, Stride, PixelSize, BlockSize, TrailPtr, CurrentPtr));
+                LowerChanges.AddRange(BlockProcess(DeltaRows, Stride, PixelSize, BlockScan, TrailPtr, CurrentPtr));
             }
         }
 
-        private unsafe List<Rectangle> BlockProcess(List<Rectangle> DeltaRows, int Stride, int PixelSize, int BlockSize, byte* TrailPtr, byte* CurrentPtr)
+        private unsafe List<Rectangle> BlockProcess(List<Rectangle> DeltaRows, int Stride, int PixelSize, Size BlockScan, byte* TrailPtr, byte* CurrentPtr)
         {
             List<Rectangle> BlockChanges = new List<Rectangle>();
-            for (int i = 0; i < DeltaRows.Count; i++)
+            for (int i = 0; i < DeltaRows.Count; ++i)
             {
                 Rectangle Row = DeltaRows[i];
-                for (int x = 0; x < Row.Width; x += BlockSize)
+                for (int x = 0; x < Row.Width; x += BlockScan.Width)
                 {
-                    if (x + BlockSize > Row.Width)
+                    if (x + BlockScan.Width > Row.Width)
                     {
-                        BlockSize = Row.Width - x;
+                        BlockScan.Width = Row.Width - x;
                     }
-                    Rectangle Block = new Rectangle(x, Row.Y, BlockSize, Row.Height);
-                    for (int y = 0; y < Row.Height; y++)
+                    for (int y = 0; y < Row.Height; ++y)
                     {
+                        Rectangle Block = new Rectangle(x, Row.Y, BlockScan.Width, Row.Height);
                         int Offset = ((Row.Y + y) * Stride) + (x * PixelSize);
-
-                        if (NativeMethods.memcmp(TrailPtr + Offset, CurrentPtr + Offset, (uint)(BlockSize * PixelSize)) != 0)
+                        if (NativeMethods.memcmp(TrailPtr + Offset, CurrentPtr + Offset, (uint)(BlockScan.Width * PixelSize)) != 0)
                         {
-                            BlockChanges.Add(Block);
+                            int LastIndex = BlockChanges.Count - 1;
+                            if (BlockChanges.Count > 0 && (BlockChanges[LastIndex].X + BlockChanges[LastIndex].Width) == Block.X)
+                            {
+                                BlockChanges[LastIndex] = new Rectangle(BlockChanges[LastIndex].X, BlockChanges[LastIndex].Y, Block.Width + BlockChanges[LastIndex].Width, BlockChanges[LastIndex].Height);
+                            }
+                            else
+                            {
+                                BlockChanges.Add(Block);
+                            }
                             break;
                         }
                     }
